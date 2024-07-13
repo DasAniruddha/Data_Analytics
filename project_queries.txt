@@ -1,0 +1,155 @@
+-- This portion contains queries for the project questions
+
+-- 1. sol_1 (made changes as per suggestion)
+SELECT p.profile_id AS 'Profile ID',
+  (p.first_name +' '+ p.last_name) AS 'Full Name',
+  p.phone AS 'Contact Number',
+  p.email,
+  CONCAT(th.diff/12, ' year ',th.diff%12, ' month') AS 'time period'
+FROM Profiles AS p
+JOIN (SELECT profile_id,
+       move_in_date,
+       move_out_date,
+       DATEDIFF(MM, move_in_date, GETDATE()) AS diff
+      FROM Tenancy_histories
+      WHERE move_out_date IS NULL) AS th
+ON th.profile_id = p.profile_id
+WHERE p.profile_id LIKE th.profile_id
+
+-- 2. sol_2 (made changes as per suggestion)
+SELECT p.profile_id AS 'Profile ID',
+  (p.first_name +' '+ p.last_name) AS 'Full Name',
+  p.phone AS 'Contact Number',
+  p.email
+FROM Profiles AS p
+WHERE p.marital_status = 'Y' AND
+     p.profile_id IN (SELECT th.profile_id 
+	              FROM Tenancy_histories AS th
+		      WHERE th.rent > 9000)
+
+-- 3. sol_3
+SELECT p.profile_id AS 'Profile ID',
+  (p.first_name + ' ' + p.last_name) AS 'Full Name',
+  p.phone AS Contact,
+  p.email AS 'Email ID',
+  p.city AS City,
+  th.house_id AS 'House ID',
+  th.move_in_date AS move_in_date,
+  th.move_out_date AS move_out_date,
+  th.rent AS Rent,
+  SUM(ref.referral_valid)
+   OVER(PARTITION BY p.profile_id) AS 'Total No. of Referrals', 
+  ed.latest_employer AS 'Latest Employer',
+  ed.occupational_category AS 'Occupation Category'
+FROM Profiles AS p
+FULL JOIN Tenancy_histories AS th
+ON th.profile_id = p.profile_id
+FULL JOIN Employment_details AS ed
+ON ed.profile_id = p.profile_id
+FULL JOIN Referrals AS ref
+ON ref.referrer_id = p.profile_id
+WHERE p.city IN ('Bangalore','Pune') AND
+  th.move_in_date >= '2015-01-01' AND th.move_out_date < '2016-01-31'
+ORDER BY th.rent DESC
+
+-- 4. sol_4 (received help from forum)
+SELECT 
+  (p.first_name + '  '  + p.last_name) AS full_name,
+  p.email,
+  p.phone,
+  p.referral_code,
+  t2.total_bonus 
+FROM Profiles AS p
+JOIN (SELECT referrer_id,
+        COUNT(referrer_id) AS referral_code
+      FROM Referrals 
+      GROUP BY referrer_id) AS t1 
+ON p1.profile_id = t1.referrer_id
+JOIN (SELECT referrer_id,
+        SUM(referrer_bonus_amount) AS total_bonus
+      FROM Referrals 
+      WHERE referral_valid=1
+      GROUP BY referrer_id) AS t2
+ON t1.referrer_id = t2.referrer_id
+WHERE t1.referral_code > 1
+
+-- 5. sol_5
+SELECT ad.city AS City, th.rent AS Rent,
+   SUM(th.rent) OVER(PARTITION BY ad.city) AS Rent_over_cities
+FROM Tenancy_histories AS th
+FULL JOIN Addresses AS ad
+ON ad.house_id = th.house_id 
+
+-- 6. sol_6
+CREATE VIEW vw_tenant
+AS
+SELECT th.profile_id AS profile_id,
+  th.rent AS rent,
+  th.move_in_date AS move_in_date,
+  h.house_type AS house_type,
+  h.beds_vacant AS beds_vacant,
+  ad.[description] AS 'description',
+  ad.city AS city,
+  CONCAT(ad.[name],  ' ',  ad.[description], ' ',
+   ad.city, ' ',  ad.pincode) AS 'address'
+FROM Tenancy_histories AS th
+FULL JOIN Houses AS h
+ON h.house_id = th.house_id
+FULL JOIN Addresses AS ad
+ON ad.house_id = th.house_id
+WHERE th.move_in_date >= '2015-04-30' AND
+  h.beds_vacant > 0
+
+-- checking if the view is working
+SELECT * FROM vw_tenant
+
+-- 7. sol_7
+-- creating a view to not affect the Referrals table
+CREATE VIEW vw_val_till
+AS 
+SELECT * FROM Referrals
+
+-- updating the view as per the condition
+UPDATE vw_val_till
+SET valid_till = DATEADD(MM, 1, valid_till)
+FROM vw_val_till
+WHERE referral_valid > 0 
+
+-- checking the updated view
+SELECT * FROM vw_val_till
+
+-- 8. sol_8
+SELECT p.profile_id AS 'Profile ID', 
+ (p.first_name + ' ' + p.last_name) AS 'Full Name',
+ p.phone AS 'Contact Number',
+ IIF(th.rent > 10000, 'A',
+     IIF(th.rent >= 7500 AND th.rent <= 10000, 'B', 'C')) AS 'Customer Segment'
+FROM Profiles AS p
+FULL JOIN Tenancy_histories AS th
+ON th.profile_id = p.profile_id
+
+-- 9. sol_9
+SELECT p.profile_id AS 'Profile ID', 
+ (p.first_name + ' ' + p.last_name) AS 'Full Name',
+ p.phone AS 'Contact Number',
+ p.city AS City,
+ h.*
+FROM Profiles AS p
+FULL JOIN Houses AS h
+ON h.house_id = p.profile_id
+WHERE p.profile_id NOT IN 
+  (SELECT referrer_id FROM Referrals)
+
+-- 10. sol_10 (made changes as per suggestion)
+SELECT h.house_type,
+ h.bhk_details,
+ h.bed_count,
+ h.furnishing_type,
+ h.beds_vacant,
+ h.house_id,
+ (h.bed_count - h.beds_vacant) AS vacancy,
+ ad.[name]
+FROM Houses AS h
+JOIN Addresses AS ad
+ON ad.house_id = h.house_id
+ORDER BY (h.bed_count - h.beds_vacant) DESC
