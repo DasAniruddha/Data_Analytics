@@ -1,0 +1,23 @@
+﻿house_type,bhk_details,bed_count,furnishing_type,beds_vacant,house_id
+'Apartment','3 BHK',5,'unfurnished',2,1
+'Apartment','3 BHK',3,'unfurnished',1,2
+'Apartment','3 BHK',6,'fully-furnished',4,3
+'Apartment','2 BHK',2,'fully-furnished',0,4
+'Independent','4 BHK',4,'fully-furnished',2,5
+'Apartment','3 BHK',3,'semifurnished',1,6
+'Apartment','3 BHK',3,'semifurnished',0,7
+'Apartment','2 BHK',4,'fully-furnished',1,8
+'Independent','1 BHK',2,'unfurnished',0,9
+'Independent','3 BHK',3,'fully-furnished',1,10
+'Apartment','1 BHK',1,'unfurnished',0,11
+'Independent','1 BHK',2,'unfurnished',1,12
+'Independent','2 BHK',4,'unfurnished',2,13
+'Apartment','3 BHK',3,'fully-furnished',0,14
+'Independent','1 BHK',2,'unfurnished',1,15
+'Apartment','3 BHK',3,'fully-furnished',0,16
+'Independent','3 BHK',3,'fully-furnished',1,17
+'Independent','2 BHK',2,'fully-furnished',1,18
+'Independent','3 BHK',3,'fully-furnished',1,19
+'Independent','1 BHK',2,'unfurnished',2,20
+
+
